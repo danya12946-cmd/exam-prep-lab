@@ -26,7 +26,7 @@ def csv_env(name, default):
 
 
 SECRET_KEY = required_env("DJANGO_SECRET_KEY")
-DEBUG = bool_env("DJANGO_DEBUG", default=True)
+DEBUG = bool_env("DJANGO_DEBUG", default=False)
 
 ALLOWED_HOSTS = csv_env(
     "DJANGO_ALLOWED_HOSTS",
