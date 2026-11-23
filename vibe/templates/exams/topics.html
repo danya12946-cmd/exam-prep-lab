@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Темы — Подготовка к экзамену{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">Темы</h1>
+    <span class="text-muted">Тест состоит из {{ required_count }} случайных вопросов</span>
+  </div>
+  {% include "exams/_topics.html" %}
+{% endblock %}

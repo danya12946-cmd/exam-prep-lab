@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Результат теста — Подготовка к экзамену{% endblock %}
+
+{% block content %}
+  <div class="mx-auto mb-4" style="max-width: 900px;">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body p-4">
+        <div class="text-muted">{{ attempt.topic.name }}</div>
+        <h1 class="h3 mt-1">Правильных ответов: {{ attempt.score }} из {{ attempt.total_questions }}</h1>
+        <div class="display-6 fw-semibold text-primary">{{ attempt.percent }}%</div>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+          <a class="btn btn-primary" href="{% url 'topics' %}">Пройти ещё</a>
+          <a class="btn btn-outline-secondary" href="{% url 'my_results' %}">Мои результаты</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mx-auto" style="max-width: 900px;">
+    <h2 class="h4 mb-3">Разбор ответов</h2>
+    <div class="vstack gap-3">
+      {% for answer in attempt.answers.all %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between gap-3 mb-3">
+              <h3 class="h6 mb-0">{{ forloop.counter }}. {{ answer.question_text }}</h3>
+              <span class="badge align-self-start {% if answer.is_correct %}text-bg-success{% else %}text-bg-danger{% endif %}">
+                {% if answer.is_correct %}Верно{% else %}Ошибка{% endif %}
+              </span>
+            </div>
+            <p class="mb-1"><strong>Ваш ответ:</strong> {{ answer.selected_text }}</p>
+            <p class="mb-0 {% if answer.is_correct %}text-muted{% else %}text-success{% endif %}">
+              <strong>Правильный ответ:</strong> {{ answer.correct_text }}
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Мои результаты — Подготовка к экзамену{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">Мои результаты</h1>
+    <a class="btn btn-primary" href="{% url 'topics' %}">Новый тест</a>
+  </div>
+
+  {% if attempts %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Дата</th>
+              <th>Тема</th>
+              <th>Результат</th>
+              <th class="text-end">Действие</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for attempt in attempts %}
+              <tr>
+                <td>{{ attempt.completed_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ attempt.topic.name }}</td>
+                <td>
+                  <span class="badge {% if attempt.percent >= 70 %}text-bg-success{% elif attempt.percent >= 40 %}text-bg-warning{% else %}text-bg-danger{% endif %}">
+                    {{ attempt.score }}/{{ attempt.total_questions }} — {{ attempt.percent }}%
+                  </span>
+                </td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'result' attempt.id %}">Подробнее</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-info">Вы ещё не проходили тесты. Выберите тему и начните.</div>
+  {% endif %}
+{% endblock %}
