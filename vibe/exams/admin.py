@@ -15,8 +15,8 @@ class AnswerOptionFormSet(BaseInlineFormSet):
             and not form.cleaned_data.get("DELETE", False)
         ]
         filled = sum(1 for form in active_forms if form.cleaned_data.get("text"))
-        if not 3 <= filled <= 4:
-            raise ValidationError("У вопроса должно быть от 3 до 4 вариантов ответа.")
+        if filled < 2:
+            raise ValidationError("У вопроса должно быть минимум 2 варианта ответа.")
 
         correct = sum(1 for form in active_forms if form.cleaned_data.get("is_correct"))
         if correct != 1:
@@ -27,11 +27,9 @@ class AnswerOptionInline(admin.TabularInline):
     model = AnswerOption
     formset = AnswerOptionFormSet
     fields = ["text", "is_correct"]
-    extra = 1
-    min_num = 3
-    max_num = 4
+    extra = 2
+    min_num = 2
     validate_min = True
-    validate_max = True
 
 
 @admin.register(Topic)

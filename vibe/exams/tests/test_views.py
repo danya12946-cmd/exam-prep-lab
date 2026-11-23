@@ -157,3 +157,43 @@ class QuizFlowTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "is_correct")
+
+
+class QuestionAdminValidationTests(TestCase):
+    def setUp(self):
+        self.topic = Topic.objects.create(name="Python")
+        admin_user = User.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="HardPass123!",
+        )
+        self.client.force_login(admin_user)
+
+    def save_question(self, options):
+        data = {
+            "topic": self.topic.pk,
+            "text": "Вопрос из админки",
+            "options-TOTAL_FORMS": len(options),
+            "options-INITIAL_FORMS": 0,
+            "options-MIN_NUM_FORMS": 2,
+            "options-MAX_NUM_FORMS": 1000,
+        }
+        for index, (text, is_correct) in enumerate(options):
+            data[f"options-{index}-text"] = text
+            if is_correct:
+                data[f"options-{index}-is_correct"] = "on"
+        return self.client.post("/admin/exams/question/add/", data)
+
+    def test_saving_question_requires_one_correct_option(self):
+        response = self.save_question([("Вариант 1", False), ("Вариант 2", False)])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Отметьте ровно один правильный ответ.")
+        self.assertFalse(Question.objects.filter(text="Вопрос из админки").exists())
+
+    def test_saving_question_requires_at_least_two_options(self):
+        response = self.save_question([("Вариант 1", True)])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "У вопроса должно быть минимум 2 варианта ответа.")
+        self.assertFalse(Question.objects.filter(text="Вопрос из админки").exists())
