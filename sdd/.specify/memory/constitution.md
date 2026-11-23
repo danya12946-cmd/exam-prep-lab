@@ -1,50 +1,105 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Exam Prep Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Простота
+Приложение MUST быть монолитом на Django. Из внешних сервисов MUST использоваться только
+PostgreSQL и Valkey. Новая сторонняя библиотека MUST добавляться только при письменном
+обосновании необходимости; её отсутствие в стандартной библиотеке или уже используемых
+зависимостях является обязательным условием. Любая новая абстракция MUST иметь несколько
+конкретных потребителей.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Обоснование: меньше зависимостей и слоёв — проще поддерживать, тестировать и разворачивать
+учебный проект.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Тесты обязательны
+Каждая пользовательская история MUST быть покрыта автотестами. Тест MUST проверять
+наблюдаемое поведение, а не внутреннюю реализацию. Все тесты MUST проходить до коммита
+изменений в коде. Тест на регрессию MUST добавляться вместе с исправлением дефекта.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Обоснование: автотесты — единственный надёжный способ подтвердить, что история работает и
+не ломается при изменениях.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Безопасность по умолчанию
+Секреты MUST читаться только из переменных окружения `.env`; в git MUST попадать только
+`.env.example` с примерами значений. `DEBUG` MUST быть `False` по умолчанию. В репозитории
+MUST присутствовать `.dockerignore`. Пользователь MUST видеть и изменять только свои данные;
+право доступа MUST проверяться на серверной стороне для каждого запроса к чужим объектам.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Обоснование: случайная утечка секретов или чужих данных недопустима даже в учебном проекте.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Целостность данных на уровне базы
+Уникальность и ограничения MUST задаваться `constraints` и такими атрибутами модели Django,
+как `unique`, `unique_together`, `CheckConstraint`, `ForeignKey` и `on_delete`, в миграциях
+базы данных. Проверки в коде MAY дополнять, но MUST NOT заменять ограничения базы данных.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Обоснование: база данных — последний рубеж целостности; код проверок можно обойти, а
+ограничения базы действуют при любом способе записи.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Воспроизводимый запуск
+Весь стек MUST подниматься одной командой `docker compose up` без ручных подготовительных
+шагов вне репозитория. Веб-сервер MUST быть gunicorn; статические файлы MUST раздаваться
+whitenoise. Версии зависимостей и системных пакетов MUST быть зафиксированы в файлах
+проекта. Разработка и продакшн MUST использовать одинаковый способ запуска.
+
+Обоснование: воспроизводимость устраняет ошибки «у меня работает» и упрощает проверку работы.
+
+### VI. Производительность и кэширование
+Часто читаемые и редко меняющиеся данные MUST кэшироваться в Valkey. Кэш MUST
+инвалидироваться при каждом изменении исходных данных, включая изменения через админку и
+прямые записи в базу. Стратегия инвалидации MUST быть описана рядом с кодом чтения кэша.
+Добавление кэша MUST подтверждаться измерением или явной гипотезой о нагрузке.
+
+Обоснование: устаревший кэш порождает неверные ответы, а бесконтрольный кэш усложняет отладку.
+
+### VII. Язык
+Документы Spec Kit, техническая документация и пользовательский интерфейс MUST быть на
+русском языке. Код и имена переменных, функций, классов и файлов MUST быть на английском
+языке. Исключениями MAY быть общепринятые технические термины и названия
+библиотек.
+
+Обоснование: единообразие языка снижает количество недопониманий между участниками проекта.
+
+## Ограничения и стандарты
+
+- Стек: Python 3.12, Django 5.2 LTS, PostgreSQL 17, Valkey, Docker Compose.
+- Внешние зависимости сверх стека добавляются только по правилу принципа I.
+- Секреты и конфигурация окружения хранятся только в `.env`; `.env.example` — шаблон без
+  реальных значений.
+- `DEBUG=False` во всех режимах по умолчанию; включение отладки требует явного решения.
+- `.dockerignore` MUST исключать `.git`, `.env`, `__pycache__/`, `.venv/`, тестовые и
+  временные файлы.
+- Доступ к объектам пользователя проверяется на уровне представлений и запросов, а не только
+  в интерфейсе.
+- Статика отдаётся whitenoise, приложение запускается под gunicorn.
+
+## Рабочий процесс и контроль качества
+
+- Планирование изменений идёт через Spec Kit: спецификация → план → задачи → реализация.
+- Каждая пользовательская история получает автотест до или вместе с реализацией.
+- Перед коммитом запускаются все тесты; коммит с падающими тестами запрещён.
+- Изменение модели данных требует миграции и проверки ограничений на уровне базы.
+- Изменение кэшируемых данных требует одновременного изменения стратегии инвалидации кэша.
+- Проверка запроса на соответствие конституции включает принципы I–VII и раздел
+  «Ограничения и стандарты».
+- Отклонение от принципа допускается только с письменным обоснованием в плане и явным
+  решением владельца проекта.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Конституция имеет приоритет над другими практиками разработки и над правилами из
+`AGENTS.md` в части конфликтующих требований. Изменения вносятся только путём правки этого
+документа с обновлением Sync Impact Report; правки шаблонов и команд Spec Kit не являются
+изменением конституции. Предложение поправки MUST содержать описание изменения, обоснование,
+влияние на существующие specs, планы и задачи, а также план миграции при изменении правил.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Версия следует семантическому версионированию: MAJOR — удаление или принципиальное
+переопределение принципа, MINOR — новый принцип или существенное расширение правил, PATCH —
+уточнение формулировок и исправление опечаток. Дата ратификации фиксируется при первом
+утверждении, дата последней правки обновляется при каждом изменении.
+
+Соответствие проверяется при каждом ревью изменений и перед каждым коммитом: автор обязан
+подтвердить, что тесты проходят и что новые правила не нарушены. Для оперативных правил
+разработки используется `AGENTS.md` как справочный документ, не заменяющий эту конституцию.
+
+**Version**: 1.0.0 | **Ratified**: 2026-11-23 | **Last Amended**: 2026-11-23
