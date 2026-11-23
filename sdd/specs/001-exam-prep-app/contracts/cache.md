@@ -14,14 +14,24 @@
 
 ## Поток чтения (cache-aside)
 
-1. `cache.get(key, SENTINEL)`.
-2. При промахе — один запрос к базе, нормализация в простые `dict`/`list`, `cache.set`.
+1. `safe_cache_get(key)` — обёртка над `cache.get(key, SENTINEL)`; при ошибке Valkey возвращает тот же sentinel, что и промах.
+2. При промахе или ошибке кэша — один запрос к базе, нормализация в простые `dict`/`list`, `safe_cache_set`.
 3. При попадании — возврат значения без SQL.
 4. QuerySet'ы и модели в кэш не кладутся.
 
+## Отказоустойчивость
+
+Valkey — только ускорение; источник истины — PostgreSQL. Все операции с кэшем выполняются через обёртки `safe_cache_get`, `safe_cache_set` и `safe_cache_delete_many` в `exams/cache.py`. При `redis.exceptions.RedisError` (включая `ConnectionError` и `TimeoutError`) или `OSError` обёртка:
+
+- пишет `logger.warning(..., exc_info=True)` в лог `exams.cache`;
+- возвращает sentinel для чтения или ничего не делает для записи/инвалидации;
+- не пробрасывает исключение в view, форму или admin.
+
+Общий `Exception` не перехватывается, чтобы не скрывать программные ошибки. Пока Valkey недоступен, инвалидации пропускаются; после восстановления время жизни потенциально устаревшего ключа ограничено TTL (300 с), а при перезапуске Valkey без persistence кэш пуст.
+
 ## Инвалидация
 
-Инвалидация выполняется через `transaction.on_commit(..., robust=True)` в сигналах и в сервисе завершения попытки. Стратегия описана рядом с хелперами чтения в `exams/cache.py`.
+Инвалидация выполняется через `transaction.on_commit(..., robust=True)` в сигналах и в сервисе завершения попытки; удаление ключей идёт через `safe_cache_delete_many`, поэтому ошибка Valkey не отменяет commit базы. Стратегия описана рядом с хелперами чтения в `exams/cache.py`.
 
 | Изменение | Удаляемые ключи | Источник события |
 |---|---|---|
@@ -40,3 +50,5 @@
 - `user:best:<user_id>` строится только для текущего пользователя.
 - Разбор попытки не кэшируется.
 - Тесты с `LocMemCache` проверяют: повторное чтение — `assertNumQueries(0)`; после изменения — `captureOnCommitCallbacks(execute=True)` и новое значение; при rollback инвалидация не выполняется.
+- Тесты целостности вариантов ответа используют `TransactionTestCase`: отложенный trigger проверяется только при реальном commit, обычный `TestCase` его не проверяет.
+- `test_cache_fallback.py` проверяет, что при `redis.exceptions.ConnectionError` на `get`/`set`/`delete_many` страница отдаёт данные из PostgreSQL, запрос завершается успешно и `assertLogs` находит предупреждение в логе `exams.cache`.

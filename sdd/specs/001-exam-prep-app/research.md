@@ -15,11 +15,13 @@
 
 ## 2. Кэш Django → Valkey
 
-**Decision**: использовать штатный бэкенд `django.core.cache.backends.redis.RedisCache` с `LOCATION`, собранным из переменных окружения `VALKEY_HOST`, `VALKEY_PORT`, `VALKEY_DB`, `VALKEY_PASSWORD` в формате `redis://...`. Кэшировать три набора: `topics:list`, `leaderboard:topic:<id>`, `user:best:<user_id>`. Чтение — через хелперы в `exams/cache.py` с `cache.get_or_set(key, callable)`; в кэше только простые `dict`/`list`, никогда QuerySet. Для тестов — `LocMemCache` через `@override_settings`.
+**Decision**: использовать штатный бэкенд `django.core.cache.backends.redis.RedisCache` с `LOCATION`, собранным из переменных окружения `VALKEY_HOST`, `VALKEY_PORT`, `VALKEY_DB`, `VALKEY_PASSWORD` в формате `redis://...`. Кэшировать три набора: `topics:list`, `leaderboard:topic:<id>`, `user:best:<user_id>`. Чтение — через хелперы в `exams/cache.py` по шаблону `get` → база → `set` (эквивалент `get_or_set`); в кэше только простые `dict`/`list`, никогда QuerySet. Для тестов — `LocMemCache` через `@override_settings`. Все обращения к кэшу идут через безопасные обёртки `safe_cache_get/set/delete_many`: Valkey считается только ускорением, база — источником истины.
 
 **Rationale**: документация Django задаёт именно `BACKEND=django.core.cache.backends.redis.RedisCache` и URL `redis://host:port/db`. Valkey использует RESP; по документации Valkey клиенты общаются с сервером через REdis Serialization Protocol (RESP), а `PING` возвращает `PONG`, поэтому стандартный Redis-клиент Django совместим с Valkey 8 на RESP2. Общий кэш нужен всем воркерам gunicorn; `LocMemCache` в проде дал бы рассинхрон между процессами.
 
-**Alternatives considered**: `django-redis` ради `delete_pattern()` — лишняя зависимость, штатный API имеет `get/set/delete/delete_many`; `cache_page` — кэширует HTML целиком и плохо управляется вручную; `functools.lru_cache` — изолирован в процессе; кэширование чужих попыток — опасно для FR-011.
+**Отказоустойчивость**: обёртки перехватывают `redis.exceptions.RedisError` (базовый класс для `ConnectionError` и `TimeoutError` в redis-py, см. документацию v5.2) и `OSError`, пишут `logger.warning(..., exc_info=True)` в лог `exams.cache` и возвращают sentinel для чтения или no-op для записи и инвалидации. Исключение не доходит до view: при недоступном Valkey страница строится из PostgreSQL. Общий `Exception` не ловится, чтобы не маскировать программные ошибки. Пока кэш недоступен, инвалидации пропускаются; после восстановления TTL (300 с) ограничивает время жизни возможно устаревшего ключа, а конфигурация Valkey без persistence означает, что после перезапуска кэш пуст.
+
+**Alternatives considered**: `django-redis` ради `delete_pattern()` — лишняя зависимость, штатный API имеет `get/set/delete/delete_many`; `cache_page` — кэширует HTML целиком и плохо управляется вручную; `functools.lru_cache` — изолирован в процессе; кэширование чужих попыток — опасно для FR-011; проброс ошибок Valkey в view — роняет приложение при недоступности кэша; in-memory fallback — рассинхрон между воркерами; circuit breaker — лишняя зависимость для учебной нагрузки.
 
 Питфоллы: у `RedisCache` нет `delete_pattern()`; пустой список нужно отличать от промаха (sentinel); пароль в URL экранируется; `cache.clear()` делает `FLUSHDB`, поэтому кэш приложения держится в отдельной DB; TTL — страховка, а не замена инвалидации. Стратегия инвалидации фиксируется комментариями рядом с хелперами чтения, как требует принцип VI.
 
@@ -34,11 +36,11 @@
 
 Прямые массовые/raw-записи обязаны явно вызывать те же функции инвалидации; такие места перечисляются в `cache.py`.
 
-**Rationale**: документация Django указывает, что `transaction.on_commit` выполняется только после успешного commit и отбрасывается при rollback. Инвалидация внутри транзакции создаёт гонку: другой запрос может наполнить кэш старыми данными до commit. `robust=True` не даёт ошибке Valkey сорвать уже закоммиченный пользовательский запрос. Точные keys дешевле и предсказуемее, чем сканирование ключей.
+**Rationale**: документация Django указывает, что `transaction.on_commit` выполняется только после успешного commit и отбрасывается при rollback. Инвалидация внутри транзакции создаёт гонку: другой запрос может наполнить кэш старыми данными до commit. `robust=True` не даёт ошибке Valkey сорвать уже закоммиченный пользовательский запрос; дополнительно `delete_many` вызывается через ту же безопасную обёртку, поэтому при недоступности кэша инвалидация пропускается и логируется, а транзакция БД остаётся успешной. Точные keys дешевле и предсказуемее, чем сканирование ключей.
 
 **Alternatives considered**: `cache.clear()` на каждое изменение — стирает чужие данные и сессии; TTL-only — нарушает FR-019; глобальный bump `VERSION` — инвалидирует всё без нужды; PostgreSQL `NOTIFY`/триггер на инвалидацию — надёжнее для raw SQL, но слишком сложно для учебного проекта и не требуется при явном запрете обходить сервисный слой.
 
-Питфоллы: `TestCase` не коммитит транзакцию, поэтому тесты используют `captureOnCommitCallbacks(execute=True)`; `QuerySet.update()`/`bulk_create()`/`bulk_update()` не шлют `post_save`.
+Питфоллы: `TestCase` не коммитит транзакцию, поэтому тесты инвалидации используют `captureOnCommitCallbacks(execute=True)`; это не заменяет тест отложенного trigger с реальным commit (см. разделы 5–6); `QuerySet.update()`/`bulk_create()`/`bulk_update()` не шлют `post_save`.
 
 ## 4. Состояние попытки и неизменяемая история
 
@@ -54,15 +56,17 @@
 
 **Rationale**: принцип IV требует, чтобы целостность гарантировалась базой; отложенный trigger позволяет formset'у временно снять и заново поставить флаг правильности в рамках одной транзакции. Partial unique index на `is_correct=True` дополнительно защищает от гонки двух правильных вариантов.
 
+**Тестирование trigger**: `TestCase` держит транзакцию открытой и откатывает её, поэтому `DEFERRABLE INITIALLY DEFERRED` не проверяется и тест может ложно пройти. Тесты `test_admin_integrity.py` наследуют `TransactionTestCase`; некорректная запись выполняется внутри `transaction.atomic()`, а `IntegrityError` ожидается при выходе из блока, когда PostgreSQL действительно проверяет ограничение. Остальные тесты остаются на `TestCase`.
+
 **Alternatives considered**: только `clean()` в форме/админке — обходится прямым ORM/SQL; шесть фиксированных колонок вариантов в `Question` — упрощает `CheckConstraint`, но противоречит отдельной сущности «Вариант ответа» и усложняет админку; немедленный trigger — ломает редактирование набора вариантов.
 
 ## 6. Тестирование
 
-**Decision**: стандартный `python manage.py test`. Базовый класс тестов подменяет кэш на `LocMemCache`, очищает его в `setUp` и использует быстрый password hasher. Покрытие по user story: `test_auth_and_topics.py`, `test_attempt_flow.py`, `test_results.py`, `test_leaderboard.py`, `test_admin_integrity.py`, `test_cache_invalidation.py`. Инвалидация проверяется через прогреть → изменить → `captureOnCommitCallbacks(execute=True)` → прочитать; отсутствие SQL — через `assertNumQueries(0)`.
+**Decision**: стандартный `python manage.py test`. Базовый класс тестов подменяет кэш на `LocMemCache`, очищает его в `setUp` и использует быстрый password hasher. Покрытие по user story: `test_auth_and_topics.py`, `test_attempt_flow.py`, `test_results.py`, `test_leaderboard.py`, `test_admin_integrity.py` (только для trigger — `TransactionTestCase`), `test_cache_invalidation.py`, `test_cache_fallback.py`. Инвалидация проверяется через прогреть → изменить → `captureOnCommitCallbacks(execute=True)` → прочитать; отсутствие SQL — через `assertNumQueries(0)`. В `test_cache_fallback.py` методы `get`/`set`/`delete_many` кэша мокируются так, что выбрасывают `redis.exceptions.ConnectionError`; проверяется, что страница возвращает данные из базы, запрос не падает и `assertLogs` находит предупреждение в `exams.cache`.
 
 **Rationale**: принцип II и SC-005 требуют проверяемого поведения, а не внутренней реализации; `LocMemCache` детерминирован и не требует Valkey в юнит-тестах; `assertNumQueries(0)` точно выражает требование «повторное чтение без БД».
 
-**Alternatives considered**: pytest-django — лишняя зависимость; реальный Valkey в тестах — медленно и зависит от окружения; `TransactionTestCase` везде — медленнее; ручной `cache.clear()` в view — маскирует ошибки инвалидации.
+**Alternatives considered**: pytest-django — лишняя зависимость; реальный Valkey в тестах — медленно и зависит от окружения; `TransactionTestCase` везде — медленнее; проверка trigger через `SET CONSTRAINTS ALL IMMEDIATE` внутри `TestCase` — не реальный commit и может скрыть проблему; ручной `cache.clear()` в view — маскирует ошибки инвалидации; тестирование деградации только вручную — не воспроизводимо.
 
 ## 7. Docker Compose, healthcheck и запуск
 
@@ -85,3 +89,4 @@
 - Django 5.2 docs, cache framework: `https://github.com/django/django/blob/5.2.18/docs/topics/cache.txt` (через context7).
 - Django 5.2 docs, transactions, signals, constraints, testing tools: страницы `/docs/topics/db/transactions.md`, `/docs/ref/signals.md`, `/docs/ref/models/constraints.txt`, `/docs/topics/testing/tools.txt` репозитория Django 5.2.18 (через context7).
 - Valkey 8.0.13 docs, installation, protocol, PING: `https://github.com/valkey-io/valkey-doc/tree/8.0.13` (через context7).
+- redis-py v5.2 docs, exceptions и retry: `https://github.com/redis/redis-py/blob/v5.2.0/docs/exceptions.rst`, `.../docs/retry.rst` (через context7).
