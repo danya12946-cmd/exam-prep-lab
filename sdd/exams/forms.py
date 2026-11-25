@@ -3,6 +3,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.forms.models import inlineformset_factory
+
+from .models import AnswerOption, Question
 
 User = get_user_model()
 
@@ -87,3 +90,40 @@ class AnswerForm(forms.Form):
         if option_key not in valid_keys:
             raise ValidationError("Выберите один из предложенных вариантов")
         return option_key
+
+
+class AnswerOptionInlineForm(forms.ModelForm):
+    position = forms.IntegerField(min_value=1, max_value=6, label="Позиция")
+
+    class Meta:
+        model = AnswerOption
+        fields = ("position", "text", "is_correct")
+
+
+class AnswerOptionInlineFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        active_forms = [
+            form
+            for form in self.forms
+            if not form.cleaned_data.get("DELETE", False)
+            and any(
+                form.cleaned_data.get(field)
+                for field in ("position", "text", "is_correct")
+            )
+        ]
+        if not 2 <= len(active_forms) <= 6:
+            raise ValidationError("Вопрос должен иметь от 2 до 6 вариантов ответа")
+        if sum(bool(form.cleaned_data.get("is_correct")) for form in active_forms) != 1:
+            raise ValidationError("Вопрос должен иметь ровно один правильный вариант")
+
+
+AnswerOptionFormSet = inlineformset_factory(
+    Question,
+    AnswerOption,
+    form=AnswerOptionInlineForm,
+    formset=AnswerOptionInlineFormSet,
+    fields=("position", "text", "is_correct"),
+    extra=2,
+    can_delete=True,
+)

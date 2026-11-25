@@ -166,12 +166,12 @@ description: "Task list for feature implementation: Веб-приложение 
 
 > **NOTE**：тесты пишутся первыми и должны УПАСТЬ до реализации
 
-- [ ] T036 [P] [US5] Написать exams/tests/test_admin_integrity.py как TransactionTestCase: реальный commit отложенного trigger отвергает 1/7 вариантов, ноль/два правильных; неизменяемость снимков после правок и удаления вопроса/темы
+- [X] T036 [P] [US5] Написать exams/tests/test_admin_integrity.py как TransactionTestCase: реальный commit отложенного trigger отвергает 1/7 вариантов, ноль/два правильных; неизменяемость снимков после правок и удаления вопроса/темы
 
 ### Implementation for User Story 5
 
-- [ ] T037 [US5] Создать TopicAdmin, QuestionAdmin и AnswerOptionInline в exams/admin.py, ограничив доступ по data-model.md (User.is_staff) и стабильные поля data-model.md (Topic.slug, Question.slug)
-- [ ] T038 [US5] Добавить валидацию formset в exams/forms.py для data-model.md (AnswerOption.position 1–6 на вопрос, AnswerOption.is_correct ровно один) с русскими сообщениями об ошибках до записи в БД по research.md §5
+- [X] T037 [US5] Создать TopicAdmin, QuestionAdmin и AnswerOptionInline в exams/admin.py, ограничив доступ по data-model.md (User.is_staff) и стабильные поля data-model.md (Topic.slug, Question.slug)
+- [X] T038 [US5] Добавить валидацию formset в exams/forms.py для data-model.md (AnswerOption.position 1–6 на вопрос, AnswerOption.is_correct ровно один) с русскими сообщениями об ошибках до записи в БД по research.md §5
 
 **Checkpoint**: администрирование и целостность истории работает
 
