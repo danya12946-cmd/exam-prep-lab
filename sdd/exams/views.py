@@ -2,12 +2,11 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_not_required
 from django.contrib.auth.views import LoginView
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .cache import get_topics, get_user_best
+from .cache import get_topic_leaderboard, get_topics, get_user_best
 from .forms import AnswerForm, LoginForm, SignUpForm, StartAttemptForm
-from .models import Attempt
+from .models import Attempt, Topic
 from .services import start_attempt, submit_answer
 
 
@@ -50,7 +49,12 @@ def result_list(request):
 
 
 def leaderboard(request, topic_id):
-    return HttpResponse("")
+    topic = get_object_or_404(Topic, pk=topic_id)
+    return render(
+        request,
+        "exams/leaderboard.html",
+        {"topic": topic, "rows": get_topic_leaderboard(topic_id)},
+    )
 
 
 def start_attempt_view(request):

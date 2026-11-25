@@ -144,13 +144,13 @@ description: "Task list for feature implementation: Веб-приложение 
 
 > **NOTE**：тесты пишутся первыми и должны УПАСТЬ до реализации
 
-- [ ] T032 [P] [US4] Написать exams/tests/test_leaderboard.py: лимит топ-10, одна строка на пользователя с лучшим процентом, детерминированный порядок при равенстве (MIN(completed_at) среди попыток с максимальным percent для пары (user, topic_id_snapshot), затем User.username asc по contracts/http.md), сообщение пустого состояния "Результатов пока нет"; отдельный тест прерванной попытки: незавершённая `IN_PROGRESS` отсутствует в лидерборде, а новая попытка по теме создаётся и учитывается
+- [X] T032 [P] [US4] Написать exams/tests/test_leaderboard.py: лимит топ-10, одна строка на пользователя с лучшим процентом, детерминированный порядок при равенстве (MIN(completed_at) среди попыток с максимальным percent для пары (user, topic_id_snapshot), затем User.username asc по contracts/http.md), сообщение пустого состояния "Результатов пока нет"; отдельный тест прерванной попытки: незавершённая `IN_PROGRESS` отсутствует в лидерборде, а новая попытка по теме создаётся и учитывается
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Реализовать запрос лидерборда в exams/services.py: только завершённые попытки, максимум data-model.md (Attempt.percent) на пользователя, сгруппировано по Attempt.topic_id_snapshot, при равенстве процентов брать MIN(Attempt.completed_at) среди попыток с максимальным percent для пары (user, topic_id_snapshot), сортировка percent desc / completed_at asc / data-model.md (User.username) asc, LIMIT 10; порядок при равенстве соответствует contracts/http.md
-- [ ] T034 [US4] Добавить cache-aside хелпер get_topic_leaderboard в exams/cache.py для leaderboard:topic:<id> с хранением простых dict по contracts/cache.md
-- [ ] T035 [US4] Реализовать представление leaderboard в exams/views.py, добавить маршрут /topics/<topic_id>/leaderboard/ в exams/urls.py и создать exams/templates/exams/leaderboard.html с местом, username, процентом и пустым состоянием
+- [X] T033 [US4] Реализовать запрос лидерборда в exams/services.py: только завершённые попытки, максимум data-model.md (Attempt.percent) на пользователя, сгруппировано по Attempt.topic_id_snapshot, при равенстве процентов брать MIN(Attempt.completed_at) среди попыток с максимальным percent для пары (user, topic_id_snapshot), сортировка percent desc / completed_at asc / data-model.md (User.username) asc, LIMIT 10; порядок при равенстве соответствует contracts/http.md
+- [X] T034 [US4] Добавить cache-aside хелпер get_topic_leaderboard в exams/cache.py для leaderboard:topic:<id> с хранением простых dict по contracts/cache.md
+- [X] T035 [US4] Реализовать представление leaderboard в exams/views.py, добавить маршрут /topics/<topic_id>/leaderboard/ в exams/urls.py и создать exams/templates/exams/leaderboard.html с местом, username, процентом и пустым состоянием
 
 **Checkpoint**: все пользовательские истории функциональны независимо
 

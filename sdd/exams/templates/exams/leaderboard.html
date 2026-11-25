@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Таблица лидеров — {{ topic.title }}{% endblock %}
+{% block content %}
+<h1>Таблица лидеров</h1>
+<p class="lead">{{ topic.title }}</p>
+{% if rows %}
+  <table class="table table-striped">
+    <thead>
+      <tr><th>Место</th><th>Участник</th><th>Процент</th></tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td>{{ row.place }}</td>
+          <td>{{ row.username }}</td>
+          <td>{{ row.percent }}%</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="lead">Результатов пока нет</p>
+{% endif %}
+{% endblock %}
