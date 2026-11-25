@@ -5,7 +5,7 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .cache import get_topics
+from .cache import get_topics, get_user_best
 from .forms import AnswerForm, LoginForm, SignUpForm, StartAttemptForm
 from .models import Attempt
 from .services import start_attempt, submit_answer
@@ -38,7 +38,15 @@ def topic_list(request):
 
 
 def result_list(request):
-    return HttpResponse("")
+    history = Attempt.objects.filter(
+        user=request.user,
+        status=Attempt.Status.COMPLETED,
+    ).order_by("-completed_at", "-id")
+    return render(
+        request,
+        "exams/result_list.html",
+        {"history": history, "best_results": get_user_best(request.user.id)},
+    )
 
 
 def leaderboard(request, topic_id):

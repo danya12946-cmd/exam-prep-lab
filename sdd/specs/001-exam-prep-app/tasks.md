@@ -122,13 +122,13 @@ description: "Task list for feature implementation: Веб-приложение 
 
 > **NOTE**：тесты пишутся первыми и должны УПАСТЬ до реализации
 
-- [ ] T028 [P] [US3] Написать exams/tests/test_results.py: порядок истории только завершённых попыток, лучший процент по теме, ссылка на свой разбор, 404 на чужую попытку; отдельный тест прерванной попытки: статус `IN_PROGRESS` отсутствует в истории и лучших результатах, а новая попытка по теме создаётся после прерывания
+- [X] T028 [P] [US3] Написать exams/tests/test_results.py: порядок истории только завершённых попыток, лучший процент по теме, ссылка на свой разбор, 404 на чужую попытку; отдельный тест прерванной попытки: статус `IN_PROGRESS` отсутствует в истории и лучших результатах, а новая попытка по теме создаётся после прерывания
 
 ### Implementation for User Story 3
 
-- [ ] T029 [US3] Добавить cache-aside хелпер get_user_best в exams/cache.py, группирующий завершённые попытки по data-model.md (Attempt.topic_id_snapshot, Attempt.topic_title_snapshot, Attempt.percent) в user:best:<user_id>; при нескольких попытках с одинаковым максимальным percent брать MIN(Attempt.completed_at)
-- [ ] T030 [US3] Реализовать представление result_list в exams/views.py: история из БД с фильтром по пользователю и data-model.md (Attempt.status, Attempt.completed_at) в порядке -completed_at; лучшие результаты из get_user_best
-- [ ] T031 [P] [US3] Создать exams/templates/exams/result_list.html с таблицей истории, блоком лучших результатов, пустыми состояниями и ссылками на /attempts/<pk>/result/ (фильтр по владельцу в представлении)
+- [X] T029 [US3] Добавить cache-aside хелпер get_user_best в exams/cache.py, группирующий завершённые попытки по data-model.md (Attempt.topic_id_snapshot, Attempt.topic_title_snapshot, Attempt.percent) в user:best:<user_id>; при нескольких попытках с одинаковым максимальным percent брать MIN(Attempt.completed_at)
+- [X] T030 [US3] Реализовать представление result_list в exams/views.py: история из БД с фильтром по пользователю и data-model.md (Attempt.status, Attempt.completed_at) в порядке -completed_at; лучшие результаты из get_user_best
+- [X] T031 [P] [US3] Создать exams/templates/exams/result_list.html с таблицей истории, блоком лучших результатов, пустыми состояниями и ссылками на /attempts/<pk>/result/ (фильтр по владельцу в представлении)
 
 **Checkpoint**: US1–US3 функциональны независимо
 

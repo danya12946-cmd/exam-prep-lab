@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Мои результаты{% endblock %}
+{% block content %}
+<h1>Мои результаты</h1>
+<h2 class="h4">История попыток</h2>
+{% if history %}
+  <table class="table table-striped">
+    <thead>
+      <tr><th>Дата</th><th>Тема</th><th>Результат</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for attempt in history %}
+        <tr>
+          <td>{{ attempt.completed_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ attempt.topic_title_snapshot }}</td>
+          <td>{{ attempt.correct_count }} из {{ attempt.question_count }}, {{ attempt.percent }}%</td>
+          <td><a href="{% url 'attempt_result' attempt.pk %}">Разбор</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="lead">Завершённых попыток пока нет</p>
+{% endif %}
+
+<h2 class="h4 mt-4">Лучшие результаты по темам</h2>
+{% if best_results %}
+  <ul class="list-group">
+    {% for result in best_results %}
+      <li class="list-group-item d-flex justify-content-between">
+        <span>{{ result.topic_title }}</span>
+        <strong>{{ result.best_percent }}%</strong>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="lead">Лучших результатов пока нет</p>
+{% endif %}
+{% endblock %}
