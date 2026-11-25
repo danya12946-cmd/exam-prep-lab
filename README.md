@@ -35,6 +35,15 @@ docker compose exec web python manage.py test
 
 Остановка: `docker compose down` (данные базы сохраняются в томе `postgres_data`).
 
+## Запуск (SDD-версия, с Valkey)
+```bash
+cd sdd
+cp .env.example .env
+docker compose up --build -d
+docker compose exec web python manage.py test
+```
+Сайт: порт **8001** (в Codespaces — вкладка Ports). Демо-данные загружаются автоматически.
+
 ## Структура репозитория
 ```
 .
@@ -59,4 +68,4 @@ docker compose exec web python manage.py test
 ## Отчёты
 - [Оценка «3»: агент, MCP, Skill, AGENTS.md](docs/report-3.md)
 - [Оценка «4»: вайбкодинг приложения](docs/report-4.md)
-- Оценка «5»: SDD + Valkey, сравнение подходов (в работе)
+- [Оценка «5»: SDD + Valkey, сравнение подходов](docs/report-5.md)
