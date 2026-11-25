@@ -10,9 +10,20 @@ urlpatterns = [
         views.leaderboard,
         name="leaderboard",
     ),
+    path("attempts/start/", views.start_attempt_view, name="attempt_start"),
     path(
         "attempts/<int:pk>/question/",
         views.attempt_question,
         name="attempt_question",
+    ),
+    path(
+        "attempts/<int:pk>/answer/",
+        views.attempt_answer,
+        name="attempt_answer",
+    ),
+    path(
+        "attempts/<int:pk>/result/",
+        views.attempt_result,
+        name="attempt_result",
     ),
 ]

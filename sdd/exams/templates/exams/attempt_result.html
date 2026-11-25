@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Результат теста{% endblock %}
+{% block content %}
+<h1>Результат теста</h1>
+<p class="h4">{{ attempt.correct_count }} из {{ attempt.question_count }}</p>
+<p class="h5">{{ attempt.percent }}%</p>
+<h2 class="h4 mt-4">Разбор вопросов</h2>
+{% for answer in answers %}
+  <div class="card">
+    <div class="card-body">
+      <p class="fw-bold">{{ forloop.counter }}. {{ answer.question_text_snapshot }}</p>
+      <p>Ваш ответ: {{ answer.selected_text_snapshot }}</p>
+      <p>Правильный ответ: {{ answer.correct_text_snapshot }}</p>
+      {% if answer.is_correct %}
+        <span class="badge bg-success">Верно</span>
+      {% else %}
+        <span class="badge bg-danger">Неверно</span>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}

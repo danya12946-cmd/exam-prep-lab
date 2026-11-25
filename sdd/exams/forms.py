@@ -51,3 +51,39 @@ class LoginForm(AuthenticationForm):
         **AuthenticationForm.error_messages,
         "invalid_login": "Неверное имя пользователя или пароль",
     }
+
+
+class StartAttemptForm(forms.Form):
+    topic_id = forms.IntegerField(
+        error_messages={
+            "required": "Тема не найдена",
+            "invalid": "Тема не найдена",
+        }
+    )
+
+    def clean_topic_id(self):
+        from .models import Topic
+
+        topic = Topic.objects.filter(pk=self.cleaned_data["topic_id"]).first()
+        if topic is None:
+            raise ValidationError("Тема не найдена")
+        if not topic.questions.exists():
+            raise ValidationError("В теме нет вопросов")
+        return topic
+
+
+class AnswerForm(forms.Form):
+    option_key = forms.CharField(
+        error_messages={"required": "Выберите один из предложенных вариантов"}
+    )
+
+    def __init__(self, *args, answer=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.answer = answer
+
+    def clean_option_key(self):
+        option_key = self.cleaned_data["option_key"]
+        valid_keys = {option["key"] for option in self.answer.options_snapshot}
+        if option_key not in valid_keys:
+            raise ValidationError("Выберите один из предложенных вариантов")
+        return option_key

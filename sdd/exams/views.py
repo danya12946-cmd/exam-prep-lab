@@ -1,11 +1,14 @@
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_not_required
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .cache import get_topics
-from .forms import LoginForm, SignUpForm
+from .forms import AnswerForm, LoginForm, SignUpForm, StartAttemptForm
+from .models import Attempt
+from .services import start_attempt, submit_answer
 
 
 @login_not_required
@@ -42,5 +45,73 @@ def leaderboard(request, topic_id):
     return HttpResponse("")
 
 
+def start_attempt_view(request):
+    if request.method != "POST":
+        return redirect("/")
+    form = StartAttemptForm(request.POST)
+    if not form.is_valid():
+        for error in form.errors.values():
+            messages.error(request, error[0])
+        return redirect("/")
+    try:
+        attempt = start_attempt(form.cleaned_data["topic_id"], request.user)
+    except ValueError as error:
+        messages.error(request, str(error))
+        return redirect("/")
+    return redirect("attempt_question", pk=attempt.pk)
+
+
 def attempt_question(request, pk):
-    return HttpResponse("")
+    attempt = get_object_or_404(Attempt, pk=pk, user=request.user)
+    if attempt.status == Attempt.Status.COMPLETED:
+        return redirect("attempt_result", pk=attempt.pk)
+    answer = (
+        attempt.answers.filter(selected_option_key__isnull=True)
+        .order_by("position")
+        .first()
+    )
+    if answer is None:
+        return redirect("attempt_result", pk=attempt.pk)
+    return render(
+        request,
+        "exams/attempt_question.html",
+        {
+            "attempt": attempt,
+            "answer": answer,
+            "progress": f"Вопрос {answer.position} из {attempt.question_count}",
+        },
+    )
+
+
+def attempt_answer(request, pk):
+    attempt = get_object_or_404(Attempt, pk=pk, user=request.user)
+    current = (
+        attempt.answers.filter(selected_option_key__isnull=True)
+        .order_by("position")
+        .first()
+    )
+    option_key = request.POST.get("option_key", "")
+    if current is not None:
+        form = AnswerForm(request.POST, answer=current)
+        if form.is_valid():
+            option_key = form.cleaned_data["option_key"]
+
+    message = submit_answer(attempt, option_key)
+    attempt.refresh_from_db()
+    if message:
+        messages.error(request, message)
+
+    if attempt.status == Attempt.Status.COMPLETED:
+        return redirect("attempt_result", pk=attempt.pk)
+    return redirect("attempt_question", pk=attempt.pk)
+
+
+def attempt_result(request, pk):
+    attempt = get_object_or_404(Attempt, pk=pk, user=request.user)
+    if attempt.status != Attempt.Status.COMPLETED:
+        return redirect("attempt_question", pk=attempt.pk)
+    return render(
+        request,
+        "exams/attempt_result.html",
+        {"attempt": attempt, "answers": attempt.answers.all()},
+    )
