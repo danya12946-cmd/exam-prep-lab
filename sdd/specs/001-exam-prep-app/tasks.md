@@ -181,11 +181,11 @@ description: "Task list for feature implementation: Веб-приложение 
 
 **Purpose**: кэш, деградация Valkey, итоговая проверка по quickstart.md
 
-- [ ] T039 [P] Написать exams/tests/test_cache_invalidation.py: prime → изменение → captureOnCommitCallbacks(execute=True) → новое значение, assertNumQueries(0) при повторном чтении, отсутствие инвалидации при rollback
-- [ ] T040 [P] Написать exams/tests/test_cache_fallback.py: подменить cache get/set/delete_many так, чтобы они выбрасывали redis.exceptions.ConnectionError; проверить, что страница отдаётся из БД и в лог exams.cache пишется предупреждение
-- [ ] T041 Запустить docker compose exec web python manage.py test в sdd/ и исправить все падения в exams/tests/
-- [ ] T042 Проверить quickstart.md в sdd/: docker compose ps, pg_isready, valkey-cli ping, python manage.py check --deploy, повторный load_demo_data, таблица ручных сценариев; убедиться, что нет SQL при чтении из кэша и что сообщения интерфейса на русском
-- [ ] T043 Зависит от T011 и T039. Добавить явную инвалидацию кэша для QuerySet.update(), bulk_create(), bulk_update() и raw SQL по contracts/cache.md:45: подключить публичный хелпер из T011 во всех таких местах и проверить его в exams/tests/test_cache_invalidation.py (файл создаётся в T039)
+- [X] T039 [P] Написать exams/tests/test_cache_invalidation.py: prime → изменение → captureOnCommitCallbacks(execute=True) → новое значение, assertNumQueries(0) при повторном чтении, отсутствие инвалидации при rollback
+- [X] T040 [P] Написать exams/tests/test_cache_fallback.py: подменить cache get/set/delete_many так, чтобы они выбрасывали redis.exceptions.ConnectionError; проверить, что страница отдаётся из БД и в лог exams.cache пишется предупреждение
+- [X] T041 Запустить docker compose exec web python manage.py test в sdd/ и исправить все падения в exams/tests/
+- [X] T042 Проверить quickstart.md в sdd/: docker compose ps, pg_isready, valkey-cli ping, python manage.py check --deploy, повторный load_demo_data, таблица ручных сценариев; убедиться, что нет SQL при чтении из кэша и что сообщения интерфейса на русском
+- [X] T043 Зависит от T011 и T039. Добавить явную инвалидацию кэша для QuerySet.update(), bulk_create(), bulk_update() и raw SQL по contracts/cache.md:45: подключить публичный хелпер из T011 во всех таких местах и проверить его в exams/tests/test_cache_invalidation.py (файл создаётся в T039)
 
 ---
 

@@ -55,6 +55,10 @@ def schedule_invalidation(function, *args, using=None):
     transaction.on_commit(partial(function, *args), using=using, robust=True)
 
 
+def invalidate_direct_write(keys, using=None):
+    schedule_invalidation(safe_cache_delete_many, list(keys), using=using)
+
+
 def invalidate_topics_list(using=None):
     safe_cache_delete_many([TOPICS_LIST_KEY])
 
