@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Темы{% endblock %}
+{% block content %}
+<h1>Темы для подготовки</h1>
+{% if topics %}
+  {% for topic in topics %}
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5 card-title">{{ topic.title }}</h2>
+        <p class="card-text">{{ topic.description }}</p>
+        <p class="text-muted">Вопросов: {{ topic.question_count }}</p>
+        <form method="post" action="/attempts/start/">
+          {% csrf_token %}
+          <input type="hidden" name="topic_id" value="{{ topic.id }}">
+          <button type="submit" class="btn btn-primary">Начать тест</button>
+        </form>
+        <a class="btn btn-outline-secondary" href="{% url 'leaderboard' topic.id %}">Таблица лидеров</a>
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  <p class="lead">Темы пока не добавлены</p>
+{% endif %}
+{% endblock %}

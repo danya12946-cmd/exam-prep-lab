@@ -71,14 +71,14 @@ description: "Task list for feature implementation: Веб-приложение 
 
 > **NOTE**：тесты пишутся первыми и должны УПАСТЬ до реализации
 
-- [ ] T022 [P] [US2] Написать exams/tests/test_auth_and_topics.py: редиректы signup/login/logout, ошибки занятого имени и простого пароля, список тем показывает 3 демо-темы с question_count 12, редирект для анонима; проверить, что анонимный запрос к внутренним страницам (/results/, /topics/<topic_id>/leaderboard/, /attempts/<pk>/question/) перенаправляется на /accounts/login/; проверить точные сообщения из contracts/http.md: "Имя пользователя уже занято", "Пароль не может быть пустым", "Пароль слишком простой", "Пароли не совпадают", "Неверное имя пользователя или пароль"
+- [X] T022 [P] [US2] Написать exams/tests/test_auth_and_topics.py: редиректы signup/login/logout, ошибки занятого имени и простого пароля, список тем показывает 3 демо-темы с question_count 12, редирект для анонима; проверить, что анонимный запрос к внутренним страницам (/results/, /topics/<topic_id>/leaderboard/, /attempts/<pk>/question/) перенаправляется на /accounts/login/; проверить точные сообщения из contracts/http.md: "Имя пользователя уже занято", "Пароль не может быть пустым", "Пароль слишком простой", "Пароли не совпадают", "Неверное имя пользователя или пароль"
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Подключить URL django.contrib.auth в config/urls.py (только login/logout; LogoutView принимает POST) и добавить явный path("accounts/signup/", signup, name="signup"), так как в auth.urls нет маршрута signup; реализовать представление signup в exams/views.py с SignUpForm в exams/forms.py, используя data-model.md (User.username unique, User.password, User.is_active), и выводить ошибки формы с точными текстами из contracts/http.md; пометить представление signup декоратором login_not_required (стандартный LoginView уже помечен этим декоратором в Django 5.2)
-- [ ] T024 [P] [US2] Создать exams/templates/exams/signup.html, exams/templates/exams/login.html и добавить навигацию авторизации в exams/templates/base.html с русскими сообщениями; отображать ошибки формы и django.contrib.messages с точными текстами из contracts/http.md
-- [ ] T025 [US2] Реализовать представление topic_list в exams/views.py, читающее topics:list через хелпер exams/cache.py и аннотирующее question_count=Count("questions")
-- [ ] T026 [P] [US2] Создать exams/templates/exams/topic_list.html с названием темы, описанием, question_count, пустым состоянием и ссылкой начала теста
+- [X] T023 [US2] Подключить URL django.contrib.auth в config/urls.py (только login/logout; LogoutView принимает POST) и добавить явный path("accounts/signup/", signup, name="signup"), так как в auth.urls нет маршрута signup; реализовать представление signup в exams/views.py с SignUpForm в exams/forms.py, используя data-model.md (User.username unique, User.password, User.is_active), и выводить ошибки формы с точными текстами из contracts/http.md; пометить представление signup декоратором login_not_required (стандартный LoginView уже помечен этим декоратором в Django 5.2)
+- [X] T024 [P] [US2] Создать exams/templates/exams/signup.html, exams/templates/exams/login.html и добавить навигацию авторизации в exams/templates/base.html с русскими сообщениями; отображать ошибки формы и django.contrib.messages с точными текстами из contracts/http.md
+- [X] T025 [US2] Реализовать представление topic_list в exams/views.py, читающее topics:list через хелпер exams/cache.py и аннотирующее question_count=Count("questions")
+- [X] T026 [P] [US2] Создать exams/templates/exams/topic_list.html с названием темы, описанием, question_count, пустым состоянием и ссылкой начала теста
 
 **Checkpoint**: US2 готова; демо-данные доступны сразу после запуска; prerequisite US1 выполнен
 
