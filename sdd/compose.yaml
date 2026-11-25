@@ -45,6 +45,8 @@ services:
     environment:
       POSTGRES_HOST: db
       VALKEY_HOST: valkey
+    volumes:
+      - .:/app
     ports:
       - "8001:8000"
     depends_on:

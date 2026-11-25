@@ -1,0 +1,16 @@
+body {
+  min-height: 100vh;
+  background-color: #f7f8fa;
+}
+
+main.container {
+  max-width: 960px;
+}
+
+.card {
+  margin-bottom: 1rem;
+}
+
+.progress {
+  margin-bottom: 1.5rem;
+}
