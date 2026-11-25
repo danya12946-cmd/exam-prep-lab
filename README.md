@@ -58,11 +58,11 @@ docker compose exec web python manage.py test
 │   ├── Dockerfile
 │   ├── compose.yaml
 │   └── .env.example
-├── sdd/                       # приложение по SDD (в работе)
+├── sdd/                       # приложение по SDD
 └── docs/                      # отчёты и скриншоты
     ├── report-3.md
     ├── report-4.md
-    └── vibe-log.md
+    └── report-5.md
 ```
 
 ## Отчёты
