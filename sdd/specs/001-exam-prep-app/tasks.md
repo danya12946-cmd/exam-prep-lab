@@ -33,10 +33,10 @@ description: "Task list for feature implementation: Веб-приложение 
 
 **Purpose**: воспроизводимый каркас проекта по `plan.md` и `research.md`
 
-- [ ] T001 Создать структуру проекта в sdd/ по plan.md: config/, exams/migrations/, exams/management/commands/, exams/templates/exams/, exams/tests/, static/css/
-- [ ] T002 [P] Создать зафиксированный список зависимостей в sdd/requirements.txt: Django 5.2 LTS, psycopg[binary], redis, gunicorn, whitenoise
-- [ ] T003 [P] Создать .env.example и .dockerignore в sdd/ по research.md §8 (DEBUG=False, SECRET_KEY, DJANGO_ALLOWED_HOSTS, POSTGRES_*, VALKEY_*)
-- [ ] T004 [P] Создать Dockerfile и compose.yaml в sdd/ по research.md §7: db postgres:17-alpine, valkey/valkey:8.0.13-alpine, web gunicorn 2 workers, port 8001, healthchecks; entrypoint.sh создаётся в T027
+- [X] T001 Создать структуру проекта в sdd/ по plan.md: config/, exams/migrations/, exams/management/commands/, exams/templates/exams/, exams/tests/, static/css/
+- [X] T002 [P] Создать зафиксированный список зависимостей в sdd/requirements.txt: Django 5.2 LTS, psycopg[binary], redis, gunicorn, whitenoise
+- [X] T003 [P] Создать .env.example и .dockerignore в sdd/ по research.md §8 (DEBUG=False, SECRET_KEY, DJANGO_ALLOWED_HOSTS, POSTGRES_*, VALKEY_*)
+- [X] T004 [P] Создать Dockerfile и compose.yaml в sdd/ по research.md §7: db postgres:17-alpine, valkey/valkey:8.0.13-alpine, web gunicorn 2 workers, port 8001, healthchecks; entrypoint.sh создаётся в T027
 
 ---
 
